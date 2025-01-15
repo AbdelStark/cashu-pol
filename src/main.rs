@@ -2,6 +2,7 @@ use bitcoin::Amount;
 use cashu_pol::PolService;
 use clap::Parser;
 use std::error::Error;
+use std::path::PathBuf;
 
 #[derive(Parser)]
 #[command(author, version, about = "Cashu Proof of Liabilities Tool")]
@@ -21,6 +22,10 @@ struct Cli {
     /// Secret to burn (for testing)
     #[arg(short = 's', long)]
     burn_secret: Option<String>,
+
+    /// Path to the database file
+    #[arg(short = 'p', long, default_value = "cashu-pol.db")]
+    db_path: PathBuf,
 }
 
 #[tokio::main]
@@ -28,7 +33,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
     // Create a new PoL service with configured parameters
-    let service = PolService::new(cli.epoch_days, cli.max_history);
+    let service = PolService::with_path(cli.epoch_days, cli.max_history, cli.db_path)?;
     service.initialize().await?;
 
     // For demonstration, create test data if requested
