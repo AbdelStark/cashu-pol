@@ -1,5 +1,6 @@
 use bitcoin::Amount;
 use cashu_pol::PolService;
+use cdk::mint::Mint;
 use clap::Parser;
 use std::error::Error;
 use std::path::PathBuf;
@@ -40,8 +41,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
     if let Some(amount) = cli.mint_amount {
         let amount = Amount::from_sat(amount);
         println!("Recording mint of {} sats", amount);
-        // TODO: Implement proper mint proof creation
-        // service.record_mint_proof(proof, amount).await?;
+        // TODO: Implement proper mint proof creation using the Cashu mint
+        // For now, we'll skip this as it requires a running mint
+        println!("Mint proof creation requires a running Cashu mint");
     }
 
     if let Some(secret) = cli.burn_secret {

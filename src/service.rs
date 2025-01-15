@@ -213,35 +213,7 @@ impl PolService {
 mod tests {
     use super::*;
     use bitcoin::Amount;
-    use cdk::nuts::nut00::Proof;
-    use rand::Rng;
     use tempfile::tempdir;
-
-    // Mock Proof for testing
-    #[derive(Debug, Clone, PartialEq)]
-    struct TestProof {
-        id: u64,
-        amount: Amount,
-        secret: Vec<u8>,
-    }
-
-    impl From<TestProof> for Proof {
-        fn from(_: TestProof) -> Self {
-            todo!("Implement conversion from TestProof to Proof")
-        }
-    }
-
-    fn create_test_proof() -> TestProof {
-        let mut rng = rand::thread_rng();
-        let mut secret = vec![0u8; 32];
-        rng.fill(&mut secret[..]);
-
-        TestProof {
-            id: 1,
-            amount: Amount::from_sat(1000),
-            secret,
-        }
-    }
 
     #[tokio::test]
     async fn test_pol_service_lifecycle() {
@@ -255,17 +227,9 @@ mod tests {
         assert_eq!(report.epoch_reports.len(), 1);
         assert_eq!(report.total_outstanding_balance, Amount::from_sat(0));
 
-        // Test recording mint proof
-        let test_proof = create_test_proof();
-        let amount = test_proof.amount;
-        // TODO: Implement proper conversion
-        // service.record_mint_proof(test_proof.into(), amount).await.unwrap();
-
-        let report = service.generate_report().await.unwrap();
-        assert_eq!(report.total_outstanding_balance, Amount::from_sat(0));
-
         // Test recording burn proof
-        let secret = hex::encode(&test_proof.secret);
+        let amount = Amount::from_sat(1000);
+        let secret = "test_secret".to_string();
         service
             .record_burn_proof(secret.clone(), amount)
             .await
@@ -281,9 +245,7 @@ mod tests {
         let report = service.generate_report().await.unwrap();
         assert_eq!(report.epoch_reports.len(), 2);
 
-        // TODO: Implement proper conversion
         // Test verification
-        // assert!(service.verify_mint_proof(0, &test_proof.into()).await.unwrap());
         assert!(service.verify_burn_proof(0, &secret).await.unwrap());
     }
 
@@ -311,26 +273,14 @@ mod tests {
         let service = PolService::with_path(30, 24, db_path).unwrap();
         service.initialize().await.unwrap();
 
-        // Record multiple mint and burn proofs
+        // Record multiple burn proofs
         let amounts = vec![1000, 2000, 3000];
         for (i, amount) in amounts.iter().enumerate() {
-            let test_proof = TestProof {
-                id: i as u64,
-                amount: Amount::from_sat(*amount),
-                secret: vec![i as u8; 32],
-            };
-
-            // TODO: Implement proper conversion
-            // service.record_mint_proof(test_proof.into(), test_proof.amount).await.unwrap();
-
-            if i < 2 {
-                // Don't burn the last amount
-                let secret = hex::encode(&test_proof.secret);
-                service
-                    .record_burn_proof(secret, test_proof.amount)
-                    .await
-                    .unwrap();
-            }
+            let secret = format!("test_secret_{}", i);
+            service
+                .record_burn_proof(secret, Amount::from_sat(*amount))
+                .await
+                .unwrap();
         }
 
         let report = service.generate_report().await.unwrap();

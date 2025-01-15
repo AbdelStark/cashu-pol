@@ -9,6 +9,7 @@ A Rust implementation of the Cashu Proof of Liabilities (PoL) scheme. This libra
 - Automatic epoch rotation and cleanup
 - Report generation for outstanding balances
 - Proof verification for both mint and burn operations
+- Persistent storage using redb
 
 ## Usage
 
@@ -28,11 +29,8 @@ use bitcoin::Amount;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create a new PoL service with 30-day epochs and 24 epoch history
-    let service = PolService::new(30, 24);
+    let service = PolService::new(30, 24)?;
     service.initialize().await?;
-
-    // Record a mint proof
-    service.record_mint_proof(proof, Amount::from_sat(1000)).await?;
 
     // Record a burn proof
     service.record_burn_proof("secret".to_string(), Amount::from_sat(1000)).await?;
@@ -44,6 +42,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 ```
+
+## Current Limitations
+
+1. **Mint Proof Creation**: Currently, mint proof creation requires a running Cashu mint. The library provides the infrastructure for recording and verifying mint proofs, but creating them requires integration with a Cashu mint.
+
+2. **Test Environment**: The test suite currently focuses on burn proof functionality. Mint proof testing will be added once the integration with the Cashu mint is implemented.
 
 ## Architecture
 
