@@ -4,26 +4,6 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 
-#[cfg(test)]
-#[derive(Debug, Clone, PartialEq)]
-pub struct MockProof {
-    pub id: String,
-    pub amount: Amount,
-    pub secret: Vec<u8>,
-}
-
-#[cfg(test)]
-impl From<MockProof> for Proof {
-    fn from(mock: MockProof) -> Self {
-        Proof {
-            keyset_id: mock.id,
-            c: hex::encode(&mock.secret),
-            witness: hex::encode(&mock.secret),
-            dleq: None,
-        }
-    }
-}
-
 #[derive(Debug, Clone, Serialize, Deserialize, Hash, Eq, PartialEq)]
 pub struct MintProof {
     pub proof: Proof,
@@ -76,4 +56,25 @@ pub enum PolError {
 
     #[error("Database error: {0}")]
     DatabaseError(String),
+
+    #[error("Database transaction error: {0}")]
+    DatabaseTransactionError(String),
+
+    #[error("Database serialization error: {0}")]
+    DatabaseSerializationError(String),
+
+    #[error("Database deserialization error: {0}")]
+    DatabaseDeserializationError(String),
+
+    #[error("Database initialization error: {0}")]
+    DatabaseInitializationError(String),
+
+    #[error("Epoch not found: {0}")]
+    EpochNotFound(u64),
+
+    #[error("Invalid proof: {0}")]
+    InvalidProof(String),
+
+    #[error("Invalid amount: {0}")]
+    InvalidAmount(String),
 }
