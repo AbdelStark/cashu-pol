@@ -1,4 +1,4 @@
-use crate::types::{BurnProof, EpochState, MintProof, PolError};
+use crate::types::{EpochState, PolError};
 use bincode::{deserialize, serialize};
 use redb::{Database, ReadableTable, TableDefinition};
 use std::path::Path;
@@ -39,14 +39,17 @@ impl Storage {
             .begin_write()
             .map_err(|e| PolError::DatabaseError(e.to_string()))?;
 
-        let mut table = write_txn
-            .open_table(EPOCHS_TABLE)
-            .map_err(|e| PolError::DatabaseError(e.to_string()))?;
+        {
+            let mut table = write_txn
+                .open_table(EPOCHS_TABLE)
+                .map_err(|e| PolError::DatabaseError(e.to_string()))?;
 
-        let data = serialize(epoch_state).map_err(|e| PolError::DatabaseError(e.to_string()))?;
-        table
-            .insert(epoch_state.epoch_id, data.as_slice())
-            .map_err(|e| PolError::DatabaseError(e.to_string()))?;
+            let data =
+                serialize(epoch_state).map_err(|e| PolError::DatabaseError(e.to_string()))?;
+            table
+                .insert(epoch_state.epoch_id, data.as_slice())
+                .map_err(|e| PolError::DatabaseError(e.to_string()))?;
+        }
 
         write_txn
             .commit()
@@ -65,16 +68,18 @@ impl Storage {
             .open_table(EPOCHS_TABLE)
             .map_err(|e| PolError::DatabaseError(e.to_string()))?;
 
-        if let Some(data) = table
+        let result = if let Some(data) = table
             .get(epoch_id)
             .map_err(|e| PolError::DatabaseError(e.to_string()))?
         {
             let epoch_state =
                 deserialize(data.value()).map_err(|e| PolError::DatabaseError(e.to_string()))?;
-            Ok(Some(epoch_state))
+            Some(epoch_state)
         } else {
-            Ok(None)
-        }
+            None
+        };
+
+        Ok(result)
     }
 
     pub fn list_epochs(&self) -> Result<Vec<EpochState>, PolError> {
@@ -107,13 +112,15 @@ impl Storage {
             .begin_write()
             .map_err(|e| PolError::DatabaseError(e.to_string()))?;
 
-        let mut table = write_txn
-            .open_table(EPOCHS_TABLE)
-            .map_err(|e| PolError::DatabaseError(e.to_string()))?;
+        {
+            let mut table = write_txn
+                .open_table(EPOCHS_TABLE)
+                .map_err(|e| PolError::DatabaseError(e.to_string()))?;
 
-        table
-            .remove(epoch_id)
-            .map_err(|e| PolError::DatabaseError(e.to_string()))?;
+            table
+                .remove(epoch_id)
+                .map_err(|e| PolError::DatabaseError(e.to_string()))?;
+        }
 
         write_txn
             .commit()
@@ -128,13 +135,15 @@ impl Storage {
             .begin_write()
             .map_err(|e| PolError::DatabaseError(e.to_string()))?;
 
-        let mut table = write_txn
-            .open_table(CURRENT_EPOCH_TABLE)
-            .map_err(|e| PolError::DatabaseError(e.to_string()))?;
+        {
+            let mut table = write_txn
+                .open_table(CURRENT_EPOCH_TABLE)
+                .map_err(|e| PolError::DatabaseError(e.to_string()))?;
 
-        table
-            .insert("current", epoch_id)
-            .map_err(|e| PolError::DatabaseError(e.to_string()))?;
+            table
+                .insert("current", epoch_id)
+                .map_err(|e| PolError::DatabaseError(e.to_string()))?;
+        }
 
         write_txn
             .commit()
@@ -153,10 +162,12 @@ impl Storage {
             .open_table(CURRENT_EPOCH_TABLE)
             .map_err(|e| PolError::DatabaseError(e.to_string()))?;
 
-        Ok(table
+        let result = table
             .get("current")
             .map_err(|e| PolError::DatabaseError(e.to_string()))?
-            .map(|v| v.value()))
+            .map(|v| v.value());
+
+        Ok(result)
     }
 }
 

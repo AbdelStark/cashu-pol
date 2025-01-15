@@ -3,7 +3,6 @@ use crate::types::{BurnProof, EpochReport, EpochState, MintProof, PolError, PolR
 use bitcoin::Amount;
 use cdk::nuts::nut00::Proof;
 use chrono::{Duration, Utc};
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use tokio::sync::RwLock;

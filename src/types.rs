@@ -35,7 +35,7 @@ pub struct PolReport {
     pub timestamp: DateTime<Utc>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct EpochState {
     pub epoch_id: u64,
     pub start_time: DateTime<Utc>,
